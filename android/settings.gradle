@@ -1,4 +1,4 @@
-   include ':app'
+include ':app'
 
-   def flutterProjectRoot = new File(settingsDir, '../')
-   apply from: new File(flutterProjectRoot, 'packages/flutter_tools/gradle/app_plugin_loader.gradle')
+def flutterProjectRoot = $rootDir.absoluteFile
+apply from: "$flutterProjectRoot/packages/flutter_tools/gradle/app_plugin_loader.gradle"

@@ -27,7 +27,6 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   List<File> playlist = [];
   final AudioPlayer _player = AudioPlayer();
-  // REMOVED: final _ffmpeg = FlutterFFmpeg(); LINE 25 FIXED
 
   @override
   void initState() {
@@ -40,7 +39,7 @@ class _HomeScreenState extends State<HomeScreen> {
       type: FileType.audio,
       allowMultiple: true,
     );
-    if (result!= null) {
+    if (result != null) {
       setState(() {
         playlist = result.paths.map((path) => File(path!)).toList();
       });
@@ -55,17 +54,27 @@ class _HomeScreenState extends State<HomeScreen> {
       return;
     }
     
-    // TEMPORARILY DISABLED: FFmpeg mixing until build works
-    // LINE 45 FIXED - removed _ffmpeg.execute(cmd)
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text("Mixing disabled for now. Build successful first!"))
     );
+  }
 
-    /* OLD FFMPEG CODE - COMMENTED OUT
-    String dir = (await getExternalStorageDirectory())!.path;
-    String output = "$dir/BlendJam_Mix_${DateTime.now().millisecondsSinceEpoch}.mp3";
-    String inputs = ""; 
-    String filter = "";
-    for (int i = 0; i < playlist.length; i++) {
-      inputs += "-i '${playlist[i].path}' ";
-      if (i >
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text("BlendJam DJ")),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ElevatedButton(onPressed: pickSongs, child: Text("Pick Songs")),
+            SizedBox(height: 20),
+            Text("Selected: ${playlist.length} songs"),
+            SizedBox(height: 20),
+            ElevatedButton(onPressed: exportMix, child: Text("Export Mix")),
+          ],
+        ),
+      ),
+    );
+  }
+}

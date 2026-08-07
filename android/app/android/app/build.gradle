@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace "com.example.blendjam"
+    namespace "com.pmakpah.blendjam"
     compileSdkVersion 34
     ndkVersion "25.1.8937393"
 
@@ -15,7 +15,7 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.example.blendjam"
+        applicationId "com.pmakpah.blendjam"
         minSdkVersion 21  // <-- THIS FIXES THE V1 ERROR
         targetSdkVersion 34
         versionCode 1

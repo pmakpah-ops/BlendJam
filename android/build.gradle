@@ -1,12 +1,11 @@
 buildscript {
-    ext.kotlin_version = '1.8.22'  // <-- DOWNGRADED FROM 1.9.10. This fixes old plugins
+    ext.kotlin_version = '1.7.10'  // <-- DOWNGRADED to match Gradle 7.5
     repositories {
         google()
         mavenCentral()
     }
-
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.3.0'
+        classpath 'com.android.tools.build:gradle:7.3.0'  // <-- WORKS WITH GRADLE 7.5
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }
@@ -24,7 +23,6 @@ subprojects {
     project.evaluationDependsOn(':app')
 }
 
-// THIS IS THE IMPORTANT PART - Forces all plugins to use Kotlin 1.8.22
 subprojects {
     project.configurations.all {
         resolutionStrategy.eachDependency { details ->

@@ -1,4 +1,16 @@
 include ':app'
 
-def flutterProjectRoot = $rootDir.absoluteFile
-apply from: "$flutterProjectRoot/packages/flutter_tools/gradle/app_plugin_loader.gradle"
+def flutterProjectRoot = new File(settingsDir.toFile(), "..").getAbsolutePath()
+def plugins = new Properties()
+def pluginsFile = new File(flutterProjectRoot, '.flutter-plugins')
+if (pluginsFile.exists()) {
+    pluginsFile.withReader('UTF-8') { reader -> plugins.load(reader) }
+}
+
+plugins.each { name, path ->
+    def pluginDirectory = new File(path)
+    if (!pluginDirectory.exists()) {
+        throw new GradleException("Flutter plugin $name not found at $path")
+    }
+    apply from: "$pluginDirectory/android/include.gradle"
+}

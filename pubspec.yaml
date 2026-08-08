@@ -11,13 +11,14 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  
-  # Core packages - update these to latest v2 versions
+
+  # Core packages - UPDATED
   cupertino_icons: ^1.0.8
   shared_preferences: ^2.2.3
   url_launcher: ^6.2.5
-  path_provider: ^2.1.3
+  path_provider: ^2.1.4
   http: ^1.2.2
+  permission_handler: ^11.3.1  # <-- ADDED THIS. This fixes the filePermissions error
 
 dev_dependencies:
   flutter_test:

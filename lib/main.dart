@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:file_picker/file_picker.dart'; // <-- ADD THIS LINE
+import 'package:file_picker/file_picker.dart';
+import 'dart:io'; // <-- NEEDED FOR File()
 
 void main() {
   runApp(const MyApp());
@@ -12,9 +13,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'BlendJam',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
+      theme: ThemeData(primarySwatch: Colors.blue),
       home: const HomeScreen(),
     );
   }
@@ -28,13 +27,47 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  List<File> playlist = []; // <-- DECLARE playlist HERE
 
-  Future<void> _pickAudio() async {  // <-- THIS IS WHERE LINE 38 IS
-    FilePickerResult? result = await FilePicker.platform.pickFiles( // <-- LINE 38
-      type: FileType.audio, // <-- LINE 100
+  Future<void> _pickAudio() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      type: FileType.audio,
+      allowMultiple: true, // so you can pick many songs
     );
 
     if (result != null) {
+      setState(() { // <-- NOW setState WILL WORK
+        playlist = result.paths.map((path) => File(path!)).toList(); // <-- LINE 64
+      });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar( // <-- context WORKS NOW
+        const SnackBar(content: Text('No file selected')),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('BlendJam')),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ElevatedButton(
+              onPressed: _pickAudio,
+              child: const Text('Pick Audio Files'),
+            ),
+            const SizedBox(height: 20),
+            Text("Selected: ${playlist.length} songs"), // <-- playlist WORKS NOW
+            if (playlist.length < 2) // <-- LINE 70
+              const Text("Pick at least 2 songs to mix"),
+          ],
+        ),
+      ),
+    );
+  }
+} // <-- MAKE SURE THIS IS THE ONLY CLOSING BRACE FOR _HomeScreenState    if (result != null) {
       // Do something with result.files.first.path
       print(result.files.first.name);
     } else {

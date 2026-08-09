@@ -4,17 +4,20 @@ workflows:
     instance_type: mac_mini_m1
     max_build_duration: 60
     environment:
-      flutter: 3.19.6  # <-- Lock Flutter version
+      flutter: 3.19.6
       xcode: latest
       cocoapods: default
       vars:
+        CM_CLEAR_CACHE: "true"  # clears cache once
         GRADLE_OPTS: "-Dorg.gradle.java.home=/Library/Java/JavaVirtualMachines/zulu-17.jdk/Contents/Home"
     scripts:
       - name: Set Gradle Version
         script: |
           cd android
-          ./gradlew wrapper --gradle-version 7.6.3 --distribution-type all
+          gradle wrapper --gradle-version 7.6.3 --distribution-type all
+      - name: Flutter packages get
+        script: flutter pub get
       - name: Flutter build APK
-        script: flutter build apk --release
+        script: flutter build apk --release --no-tree-shake-icons
     artifacts:
       - build/app/outputs/flutter-apk/*.apk

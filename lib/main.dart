@@ -1,40 +1,60 @@
 import 'package:flutter/material.dart';
-import 'package:just_audio/just_audio.dart';
-import 'package:permission_handler/permission_handler.dart';
-import 'package:file_picker/file_picker.dart';
-import 'package:path_provider/path_provider.dart';
-import 'dart:io';
+import 'package:file_picker/file_picker.dart'; // <-- ADD THIS LINE
 
-void main() => runApp(BlendJamApp());
+void main() {
+  runApp(const MyApp());
+}
 
-class BlendJamApp extends StatelessWidget {
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: "BlendJam DJ",
-      theme: ThemeData.dark(),
-      home: HomeScreen(),
-      debugShowCheckedModeBanner: false,
+      title: 'BlendJam',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+      ),
+      home: const HomeScreen(),
     );
   }
 }
 
 class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
   @override
-  _HomeScreenState createState() => _HomeScreenState();
+  State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  List<File> playlist = [];
-  final AudioPlayer _player = AudioPlayer();
 
-  @override
-  void initState() {
-    super.initState();
-    Permission.storage.request();
+  Future<void> _pickAudio() async {  // <-- THIS IS WHERE LINE 38 IS
+    FilePickerResult? result = await FilePicker.platform.pickFiles( // <-- LINE 38
+      type: FileType.audio, // <-- LINE 100
+    );
+
+    if (result != null) {
+      // Do something with result.files.first.path
+      print(result.files.first.name);
+    } else {
+      // User canceled the picker
+    }
   }
 
-  Future<void> pickSongs() async {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('BlendJam')),
+      body: Center(
+        child: ElevatedButton(
+          onPressed: _pickAudio,
+          child: const Text('Pick Audio'),
+        ),
+      ),
+    );
+  }
+}  Future<void> pickSongs() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
       type: FileType.audio,
       allowMultiple: true,

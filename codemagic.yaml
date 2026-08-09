@@ -8,9 +8,13 @@ workflows:
       xcode: latest
       cocoapods: default
       vars:
-        CM_CLEAR_CACHE: "true"  # clears cache once
+        CM_CLEAR_CACHE: "true"
         GRADLE_OPTS: "-Dorg.gradle.java.home=/Library/Java/JavaVirtualMachines/zulu-17.jdk/Contents/Home"
     scripts:
+      - name: Create local.properties
+        script: |
+          cd android
+          echo "sdk.dir=/Users/builder/sdk" > local.properties
       - name: Set Gradle Version
         script: |
           cd android

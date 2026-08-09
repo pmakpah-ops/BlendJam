@@ -15,6 +15,10 @@ workflows:
         script: |
           cd android
           echo "sdk.dir=/Users/builder/sdk" > local.properties
+          echo "flutter.sdk=/Users/builder/programs/flutter" >> local.properties
+          echo "flutter.buildMode=release" >> local.properties
+          echo "flutter.versionName=1.0.0" >> local.properties
+          echo "flutter.versionCode=1" >> local.properties
       - name: Set Gradle Version
         script: |
           cd android

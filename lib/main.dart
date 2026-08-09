@@ -14,7 +14,6 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'BlendJam',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(primarySwatch: Colors.blue),
       home: const HomeScreen(),
     );
   }
@@ -28,27 +27,29 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  List<File> playlist = []; // This fixes "Setter not found: playlist"
+  List<File> playlist = []; // 1. DECLARE VARIABLE HERE
 
-  Future<void> _pickAudio() async { // This fixes "Undefined name _pickAudio"
+  Future<void> _pickAudio() async { // 2. FUNCTION INSIDE CLASS
     FilePickerResult? result = await FilePicker.platform.pickFiles(
       type: FileType.audio,
       allowMultiple: true,
     );
 
     if (result != null) {
-      setState(() { // This fixes "Method not found: setState"
-        playlist = result.paths.map((path) => File(path!)).toList();
+      setState(() { // 3. setState WORKS HERE
+        playlist = result.paths.where((p) => p != null).map((p) => File(p!)).toList();
       });
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No file selected')),
-      );
+      if (mounted) { // safe way to use context
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No file selected')),
+        );
+      }
     }
   }
 
   @override
-  Widget build(BuildContext context) { // ONLY ONE build function
+  Widget build(BuildContext context) { // 4. ONLY ONE BUILD
     return Scaffold(
       appBar: AppBar(title: const Text('BlendJam')),
       body: Center(
@@ -56,11 +57,11 @@ class _HomeScreenState extends State<HomeScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             ElevatedButton(
-              onPressed: _pickAudio, // Now this will work
+              onPressed: _pickAudio,
               child: const Text('Pick Audio Files'),
             ),
             const SizedBox(height: 20),
-            Text("Selected: ${playlist.length} songs"),
+            Text("Selected: ${playlist.length} songs"), // playlist WORKS HERE
             if (playlist.length < 2)
               const Text("Pick at least 2 songs to mix"),
           ],
@@ -68,58 +69,4 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-} // Only 1 closing brace here  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('BlendJam')),
-      body: Center(
-        child: ElevatedButton(
-          onPressed: _pickAudio,
-          child: const Text('Pick Audio'),
-        ),
-      ),
-    );
-  }
-}  Future<void> pickSongs() async {
-    FilePickerResult? result = await FilePicker.platform.pickFiles(
-      type: FileType.audio,
-      allowMultiple: true,
-    );
-    if (result != null) {
-      setState(() {
-        playlist = result.paths.map((path) => File(path!)).toList();
-      });
-    }
-  }
-
-  Future<void> exportMix() async {
-    if (playlist.length < 2) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Pick at least 2 songs first"))
-      );
-      return;
-    }
-    
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("Mixing disabled for now. Build successful first!"))
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text("BlendJam DJ")),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            ElevatedButton(onPressed: pickSongs, child: Text("Pick Songs")),
-            SizedBox(height: 20),
-            Text("Selected: ${playlist.length} songs"),
-            SizedBox(height: 20),
-            ElevatedButton(onPressed: exportMix, child: Text("Export Mix")),
-          ],
-        ),
-      ),
-    );
-  }
-}
+} // END OF CLASS

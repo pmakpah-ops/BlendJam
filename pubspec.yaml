@@ -1,29 +1,24 @@
 name: blendjam
 description: A new Flutter project.
-publish_to: 'none'
 
+publish_to: 'none'
 version: 1.0.0+1
 
 environment:
-  sdk: ">=3.3.0 <4.0.0"
-  flutter: ">=3.19.0"
+  sdk: '>=3.0.0 <4.0.0'
 
 dependencies:
   flutter:
     sdk: flutter
-
-  # Core packages - UPDATED
-  cupertino_icons: ^1.0.8
-  shared_preferences: ^2.2.3
-  url_launcher: ^6.2.5
-  path_provider: ^2.1.4
-  http: ^1.2.2
-  permission_handler: ^11.3.1  # <-- ADDED THIS. This fixes the filePermissions error
+  file_picker: ^5.5.0   # <-- ADD THIS LINE. This version has FilePickerResult + FileType
+  
+  # Add your other packages here
+  # just_audio: ^0.9.42
+  # provider: ^6.1.2
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^3.0.1
 
 flutter:
   uses-material-design: true

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
-import 'dart:io'; // <-- NEEDED FOR File()
+import 'dart:io';
 
 void main() {
   runApp(const MyApp());
@@ -13,6 +13,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'BlendJam',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(primarySwatch: Colors.blue),
       home: const HomeScreen(),
     );
@@ -27,27 +28,27 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  List<File> playlist = []; // <-- DECLARE playlist HERE
+  List<File> playlist = []; // This fixes "Setter not found: playlist"
 
-  Future<void> _pickAudio() async {
+  Future<void> _pickAudio() async { // This fixes "Undefined name _pickAudio"
     FilePickerResult? result = await FilePicker.platform.pickFiles(
       type: FileType.audio,
-      allowMultiple: true, // so you can pick many songs
+      allowMultiple: true,
     );
 
     if (result != null) {
-      setState(() { // <-- NOW setState WILL WORK
-        playlist = result.paths.map((path) => File(path!)).toList(); // <-- LINE 64
+      setState(() { // This fixes "Method not found: setState"
+        playlist = result.paths.map((path) => File(path!)).toList();
       });
     } else {
-      ScaffoldMessenger.of(context).showSnackBar( // <-- context WORKS NOW
+      ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('No file selected')),
       );
     }
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) { // ONLY ONE build function
     return Scaffold(
       appBar: AppBar(title: const Text('BlendJam')),
       body: Center(
@@ -55,28 +56,19 @@ class _HomeScreenState extends State<HomeScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             ElevatedButton(
-              onPressed: _pickAudio,
+              onPressed: _pickAudio, // Now this will work
               child: const Text('Pick Audio Files'),
             ),
             const SizedBox(height: 20),
-            Text("Selected: ${playlist.length} songs"), // <-- playlist WORKS NOW
-            if (playlist.length < 2) // <-- LINE 70
+            Text("Selected: ${playlist.length} songs"),
+            if (playlist.length < 2)
               const Text("Pick at least 2 songs to mix"),
           ],
         ),
       ),
     );
   }
-} // <-- MAKE SURE THIS IS THE ONLY CLOSING BRACE FOR _HomeScreenState    if (result != null) {
-      // Do something with result.files.first.path
-      print(result.files.first.name);
-    } else {
-      // User canceled the picker
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
+} // Only 1 closing brace here  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('BlendJam')),
       body: Center(

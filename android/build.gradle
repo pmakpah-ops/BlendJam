@@ -1,11 +1,11 @@
 buildscript {
-    ext.kotlin_version = '1.7.10'  // <-- 1.7.10 matches Gradle 7.5
+    ext.kotlin_version = '1.8.22'  // <-- Back to 1.8.22 because Gradle 7.6.3 supports it
     repositories {
         google()
         mavenCentral()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.3.0'  // <-- 7.3.0 works with Gradle 7.5
+        classpath 'com.android.tools.build:gradle:7.4.2'  // <-- 7.4.2 needs Gradle 7.6.3
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }

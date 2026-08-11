@@ -7,10 +7,7 @@ workflows:
       flutter: 3.19.6
       xcode: latest
       cocoapods: default
-    vars:
-      CM_CLEAN_CACHE: "true"
-      GRADLE_OPTS: -Dorg.gradle.jvmargs=-Xmx4096M
     scripts:
-            - name: Build APK
+      - name: Build APK
         script: |
           flutter build apk --release

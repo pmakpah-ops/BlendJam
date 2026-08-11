@@ -9,23 +9,11 @@ workflows:
       cocoapods: default
       vars:
         CM_CLEAR_CACHE: "true"
-        GRADLE_OPTS: "-Dorg.gradle.java.home=/Library/Java/JavaVirtualMachines/zulu-17.jdk/Contents/Home"
+        GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4g"
     scripts:
+      - name: Clean Gradle
+        script: |
+          cd android
+          ./gradlew clean
       - name: Create local.properties
         script: |
-          cd android
-          echo "sdk.dir=/Users/builder/sdk" > local.properties
-          echo "flutter.sdk=/Users/builder/programs/flutter" >> local.properties
-          echo "flutter.buildMode=release" >> local.properties
-          echo "flutter.versionName=1.0.0" >> local.properties
-          echo "flutter.versionCode=1" >> local.properties
-      - name: Set Gradle Version
-        script: |
-          cd android
-          gradle wrapper --gradle-version 7.6.3 --distribution-type all
-      - name: Flutter packages get
-        script: flutter pub get
-      - name: Flutter build APK
-        script: flutter build apk --release --no-tree-shake-icons
-    artifacts:
-      - build/app/outputs/flutter-apk/*.apk

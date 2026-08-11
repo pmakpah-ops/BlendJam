@@ -11,7 +11,3 @@ workflows:
         CM_CLEAR_CACHE: "true"
         GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4g"
     scripts:
-      - name: Clean Gradle
-        script: |
-          cd android
-          ./gradlew clean

@@ -15,5 +15,3 @@ workflows:
         script: |
           cd android
           ./gradlew clean
-      - name: Create local.properties
-        script: |

@@ -1,0 +1,23 @@
+workflows:
+  blendjam-android-release:
+    name: BlendJam Android Release
+    max_build_duration: 120
+    environment:
+      flutter: 3.22.2
+      xcode: latest
+      cocoapods: default
+    scripts:
+      - name: Install dependencies
+        script: |
+          flutter pub get
+          cd android
+          ./gradlew clean
+          cd ..
+      - name: Build APK Release
+        script: flutter build apk --release --no-tree-shake-icons
+    artifacts:
+      - build/app/outputs/flutter-apk/*.apk
+    publishing:
+      email:
+        recipients:
+          - your_email@gmail.com # optional: change to your email

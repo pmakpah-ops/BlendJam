@@ -1,5 +1,7 @@
-<manifest package="com.example.blendjam" xmlns:android="http://schemas.android.com/apk/res/android">
-   <application
+<manifest package="com.example.blendjam"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application
         android:label="BlendJam"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">

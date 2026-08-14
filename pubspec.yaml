@@ -1,5 +1,5 @@
 name: blendjam
-description: 30 Song Auto DJ Mixer for Android
+description: 30 Song Auto DJ Mixer for DJs
 publish_to: 'none'
 version: 1.0.0+1
 
@@ -10,8 +10,8 @@ dependencies:
   flutter:
     sdk: flutter
   just_audio: ^0.9.42
-  file_picker: ^5.5.0
-  permission_handler: ^11.3.1
+  file_picker: ^10.2.0
+  permission_handler: ^11.4.0
 
 flutter:
   uses-material-design: true

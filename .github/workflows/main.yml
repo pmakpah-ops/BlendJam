@@ -25,10 +25,7 @@ jobs:
           channel: 'stable'
 
       - name: Install dependencies
-        run: |
-          rm -f pubspec.lock
-          flutter clean
-          flutter pub get
+        run: rm -f pubspec.lock && flutter clean && flutter pub get
 
       - name: Build APK
         run: flutter build apk --release --no-tree-shake-icons
@@ -36,4 +33,5 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-         
+          name: BlendJam-Release-APK
+          path: build/app/outputs/flutter-apk/app-release.apk

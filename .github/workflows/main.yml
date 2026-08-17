@@ -24,9 +24,9 @@ jobs:
           flutter-version: '3.24.3'
           channel: 'stable'
 
-      - name: Install dependencies  # <-- REPLACE THIS WHOLE BLOCK
+      - name: Install dependencies
         run: |
-          rm pubspec.lock
+          rm -f pubspec.lock
           flutter clean
           flutter pub get
 
@@ -36,5 +36,4 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: BlendJam-Release-APK
-          path: build/app/outputs/flutter-apk/app-release.apk
+         

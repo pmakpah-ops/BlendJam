@@ -9,8 +9,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  audio_session: ^0.2.8
-  just_audio: ^0.9.40
+  audio_session: ^0.2.4
+  just_audio: ^0.9.41
 
 flutter:
   uses-material-design: true

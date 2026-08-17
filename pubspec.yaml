@@ -1,20 +1,16 @@
 name: blendjam
-description: 30 Song Auto DJ Mixer for DJs
+description: A new Flutter project for music.
 publish_to: 'none'
 version: 1.0.0+1
 
 environment:
-  sdk: '>=3.5.0 <4.0.0'
+  sdk: '>=3.3.0 <4.0.0'
 
 dependencies:
   flutter:
     sdk: flutter
-  just_audio: ^0.9.42
-  audio_session: ^0.1.24
-  # file_picker: ^8.3.3  <-- COMMENT OUT
-  # permission_handler: ^11.4.0  <-- COMMENT OUT
+  audio_session: ^0.2.8
+  just_audio: ^0.9.40
 
 flutter:
   uses-material-design: true
-  assets:
-    - assets/

@@ -21,14 +21,17 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.24.3'  # <-- THIS IS THE ONLY LINE WE CHANGED
+          flutter-version: '3.24.3'
           channel: 'stable'
 
-      - name: Install dependencies
-        run: flutter pub get
+      - name: Install dependencies  # <-- REPLACE THIS WHOLE BLOCK
+        run: |
+          rm pubspec.lock
+          flutter clean
+          flutter pub get
 
       - name: Build APK
-        run: flutter build apk --release
+        run: flutter build apk --release --no-tree-shake-icons
 
       - name: Upload APK
         uses: actions/upload-artifact@v4

@@ -1,5 +1,0 @@
-cd BlendJam
-flutter create .
-git add android ios .gitignore
-git commit -m "fix: regenerate android/ios with v2 embedding"
-git push

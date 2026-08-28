@@ -1,5 +1,5 @@
 name: blendjam
-description: A new Flutter project for music.
+description: A new Flutter project for music blending
 publish_to: 'none'
 version: 1.0.0+1
 
@@ -9,8 +9,20 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  audio_session: ^0.2.4
-  just_audio: ^0.9.41
+  
+  # Audio packages
+  just_audio: ^0.9.42
+  audio_session: ^0.1.17
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
 
 flutter:
   uses-material-design: true
+
+  # Uncomment this when you add audio/assets
+  # assets:
+  #   - assets/audio/
+  #   - assets/images/

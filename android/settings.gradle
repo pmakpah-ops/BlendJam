@@ -1,1 +1,15 @@
+pluginManagement {
+    def flutterSdkPath = {
+        def properties = new Properties()
+        file("$rootDir/../flutter_tools.gradle.properties").withInputStream { properties.load(it) }
+        return properties.getProperty('flutter.sdk')
+    }()
+    includeBuild("$flutterSdkPath/packages/flutter_tools/gradle")
+}
+
+plugins {
+    id "dev.flutter.flutter-plugin-loader" version "1.0.0"
+    id "dev.flutter.flutter-gradle-plugin" version "1.0.0" apply false
+}
+
 include ':app'

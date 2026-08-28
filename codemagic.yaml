@@ -1,23 +1,27 @@
 workflows:
-  blendjam-android-release:
+  android-release:
     name: BlendJam Android Release
-    max_build_duration: 120
+    max_build_duration: 60
+    instance_type: mac_mini_m2
     environment:
-      flutter: 3.22.2
-      xcode: latest
+      flutter: 3.19.6  # stable version that supports v2 embedding
+      xcode: 15.3
       cocoapods: default
+      groups:
+        - google_play
     scripts:
       - name: Install dependencies
         script: |
           flutter pub get
-          cd android
-          ./gradlew clean
-          cd ..
-      - name: Build APK Release
-        script: flutter build apk --release --no-tree-shake-icons
+      - name: Flutter clean
+        script: |
+          flutter clean
+      - name: Build APK
+        script: |
+          flutter build apk --release --split-per-abi
     artifacts:
       - build/app/outputs/flutter-apk/*.apk
     publishing:
       email:
         recipients:
-          - your_email@gmail.com # optional: change to your email
+          - pmakpah-ops  # change to your email

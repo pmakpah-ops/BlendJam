@@ -25,7 +25,6 @@ if (flutterVersionName == null) {
 android {
     namespace = "com.example.blendjam"
     compileSdk = 35
-    ndkVersion = "28.2.1366358"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8

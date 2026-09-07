@@ -1,28 +1,23 @@
 name: blendjam
-description: A new Flutter project for music blending
+description: BlendJam DJ Mixer - Real Audio Mixer
 publish_to: 'none'
 version: 1.0.0+1
 
 environment:
-  sdk: '>=3.3.0 <4.0.0'
+  sdk: '>=3.0.0 <4.0.0'
 
 dependencies:
   flutter:
     sdk: flutter
-  
-  # Audio packages
-  just_audio: ^0.9.42
-  audio_session: ^0.1.17
+  cupertino_icons: ^1.0.6
+  just_audio: ^2.9.3
+  file_picker: ^6.1.1
+  permission_handler: ^11.0.1
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^4.0.0
+  flutter_lints: ^3.0.0
 
 flutter:
   uses-material-design: true
-
-  # Uncomment this when you add audio/assets
-  # assets:
-  #   - assets/audio/
-  #   - assets/images/

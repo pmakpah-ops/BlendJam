@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:just_audio/just_audio.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 void main() {
   runApp(const BlendJamApp());
@@ -6,14 +9,12 @@ void main() {
 
 class BlendJamApp extends StatelessWidget {
   const BlendJamApp({super.key});
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'BlendJam',
       debugShowCheckedModeBanner: false,
       theme: ThemeData.dark().copyWith(
-        primaryColor: Colors.deepPurple,
         scaffoldBackgroundColor: const Color(0xFF121212),
       ),
       home: const DJHomePage(),
@@ -28,15 +29,108 @@ class DJHomePage extends StatefulWidget {
 }
 
 class _DJHomePageState extends State<DJHomePage> {
+  final AudioPlayer playerA = AudioPlayer();
+  final AudioPlayer playerB = AudioPlayer();
+
+  String? fileAName;
+  String? fileBName;
   double crossfade = 0.5;
   double tempoA = 1.0;
   double tempoB = 1.0;
-  bool isPlayingA = false;
-  bool isPlayingB = false;
   bool autoMix = false;
+  List<String> queuePaths = [];
+  List<String> queueNames = [];
   int currentTrackIndex = 0;
 
-  final List<String> tracks = List.generate(30, (i) => "Track ${i + 1} - DJ Mix ${i + 1}");
+  @override
+  void initState() {
+    super.initState();
+    _updateVolumes();
+  }
+
+  void _updateVolumes() {
+    playerA.setVolume(1.0 - crossfade);
+    playerB.setVolume(crossfade);
+  }
+
+  Future<void> _loadToDeck(bool isDeckA) async {
+    var status = await Permission.audio.request();
+    if (!status.isGranted) {
+      var s2 = await Permission.storage.request();
+      if (!s2.isGranted) {
+        if(mounted) ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Permission denied - cannot access MP3s')));
+        return;
+      }
+    }
+
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      type: FileType.audio,
+      allowMultiple: false,
+    );
+
+    if (result != null && result.files.single.path != null) {
+      String path = result.files.single.path!;
+      String name = result.files.single.name;
+      try {
+        if (isDeckA) {
+          await playerA.setFilePath(path);
+          await playerA.setSpeed(tempoA);
+          setState(() => fileAName = name);
+        } else {
+          await playerB.setFilePath(path);
+          await playerB.setSpeed(tempoB);
+          setState(() => fileBName = name);
+        }
+        _updateVolumes();
+        if(mounted) ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Loaded $name to Deck ${isDeckA ? 'A' : 'B'}')));
+      } catch (e) {
+        if(mounted) ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error loading: $e')));
+      }
+    }
+  }
+
+  Future<void> _addToQueue() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      type: FileType.audio,
+      allowMultiple: true,
+    );
+    if (result != null) {
+      setState(() {
+        for (var f in result.files) {
+          if (f.path != null) {
+            queuePaths.add(f.path!);
+            queueNames.add(f.name);
+          }
+        }
+      });
+    }
+  }
+
+  Future<void> _playQueueTrack(int index) async {
+    if (index < 0 || index >= queuePaths.length) return;
+    setState(() => currentTrackIndex = index);
+    // Simple: load to Deck A and play
+    try {
+      await playerA.setFilePath(queuePaths[index]);
+      await playerA.setSpeed(tempoA);
+      _updateVolumes();
+      await playerA.play();
+      setState(() => fileAName = queueNames[index]);
+    } catch (e) {
+      if(mounted) ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Play error: $e')));
+    }
+  }
+
+  @override
+  void dispose() {
+    playerA.dispose();
+    playerB.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -45,10 +139,7 @@ class _DJHomePageState extends State<DJHomePage> {
         title: const Text('BlendJam DJ Mixer'),
         backgroundColor: Colors.deepPurple,
         actions: [
-          Switch(
-            value: autoMix,
-            onChanged: (v) => setState(() => autoMix = v),
-          ),
+          Switch(value: autoMix, onChanged: (v) => setState(() => autoMix = v)),
           const Padding(
             padding: EdgeInsets.only(right: 12, top: 16),
             child: Text('Auto Mix'),
@@ -61,27 +152,9 @@ class _DJHomePageState extends State<DJHomePage> {
             padding: const EdgeInsets.all(12.0),
             child: Row(
               children: [
-                Expanded(
-                  child: _buildDeck(
-                    'DECK A',
-                    isPlayingA,
-                    tempoA,
-                    (v) => setState(() => tempoA = v),
-                    () => setState(() => isPlayingA =!isPlayingA),
-                    Colors.blue,
-                  ),
-                ),
+                Expanded(child: _buildDeck('DECK A', playerA, fileAName, tempoA, true)),
                 const SizedBox(width: 12),
-                Expanded(
-                  child: _buildDeck(
-                    'DECK B',
-                    isPlayingB,
-                    tempoB,
-                    (v) => setState(() => tempoB = v),
-                    () => setState(() => isPlayingB =!isPlayingB),
-                    Colors.red,
-                  ),
-                ),
+                Expanded(child: _buildDeck('DECK B', playerB, fileBName, tempoB, false)),
               ],
             ),
           ),
@@ -92,7 +165,7 @@ class _DJHomePageState extends State<DJHomePage> {
                 const Text('CROSSFADER', style: TextStyle(letterSpacing: 2)),
                 Slider(
                   value: crossfade,
-                  onChanged: (v) => setState(() => crossfade = v),
+                  onChanged: (v) => setState(() { crossfade = v; _updateVolumes(); }),
                 ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -105,81 +178,86 @@ class _DJHomePageState extends State<DJHomePage> {
             ),
           ),
           const Divider(),
-          const Padding(
-            padding: EdgeInsets.all(8.0),
-            child: Text('30 Song Auto DJ Queue', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('Queue (${queueNames.length} songs)',
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                ElevatedButton.icon(
+                  onPressed: _addToQueue,
+                  icon: const Icon(Icons.add),
+                  label: const Text('Add MP3s'),
+                ),
+              ],
+            ),
           ),
           Expanded(
-            child: ListView.builder(
-              itemCount: tracks.length,
-              itemBuilder: (context, i) {
-                final isCurrent = i == currentTrackIndex;
-                return ListTile(
-                  selected: isCurrent,
-                  selectedTileColor: Colors.deepPurple.withOpacity(0.3),
-                  leading: Icon(
-                    isCurrent? Icons.equalizer : Icons.music_note,
-                    color: isCurrent? Colors.deepPurpleAccent : null,
+            child: queueNames.isEmpty
+                ? const Center(child: Text('Tap "Add MP3s" to load songs from your phone'))
+                : ListView.builder(
+                    itemCount: queueNames.length,
+                    itemBuilder: (context, i) {
+                      final isCurrent = i == currentTrackIndex;
+                      return ListTile(
+                        selected: isCurrent,
+                        selectedTileColor: Colors.deepPurple.withOpacity(0.3),
+                        leading: Icon(isCurrent ? Icons.equalizer : Icons.music_note,
+                            color: isCurrent ? Colors.deepPurpleAccent : null),
+                        title: Text(queueNames[i]),
+                        trailing: IconButton(
+                          icon: const Icon(Icons.play_arrow),
+                          onPressed: () => _playQueueTrack(i),
+                        ),
+                        onTap: () => _playQueueTrack(i),
+                      );
+                    },
                   ),
-                  title: Text(tracks[i]),
-                  subtitle: Text(autoMix && isCurrent? 'Now Auto-Mixing...' : '128 BPM • 3:45'),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.play_arrow),
-                    onPressed: () => setState(() => currentTrackIndex = i),
-                  ),
-                  onTap: () => setState(() => currentTrackIndex = i),
-                );
-              },
-            ),
           ),
         ],
-      ),
-      bottomNavigationBar: Container(
-        color: Colors.deepPurple,
-        padding: const EdgeInsets.all(12),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.auto_awesome, color: Colors.white),
-            const SizedBox(width: 8),
-            Text(
-              autoMix? 'AUTO MIX ON - Playing ${tracks[currentTrackIndex]}' : 'AUTO MIX OFF',
-              style: const TextStyle(color: Colors.white),
-            ),
-          ],
-        ),
       ),
     );
   }
 
-  Widget _buildDeck(String label, bool playing, double tempo, ValueChanged<double> onTempo, VoidCallback onPlay, Color color) {
+  Widget _buildDeck(String label, AudioPlayer player, String? fileName, double tempo, bool isDeckA) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: const Color(0xFF1E1E1E),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.5)),
+        border: Border.all(color: Colors.deepPurple.withOpacity(0.5)),
       ),
       child: Column(
         children: [
-          Text(label, style: TextStyle(color: color, fontWeight: FontWeight.bold)),
+          Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
+          const SizedBox(height: 4),
+          Text(fileName ?? 'No file loaded',
+              style: const TextStyle(fontSize: 12, color: Colors.grey),
+              overflow: TextOverflow.ellipsis),
           const SizedBox(height: 8),
-          Container(
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: color.withOpacity(0.2),
-              border: Border.all(color: color),
-            ),
-            child: Icon(Icons.album, size: 50, color: color),
+          ElevatedButton(
+            onPressed: () => _loadToDeck(isDeckA),
+            child: const Text('Load MP3'),
           ),
           const SizedBox(height: 8),
-          IconButton(
-            iconSize: 48,
-            color: color,
-            icon: Icon(playing? Icons.pause_circle_filled : Icons.play_circle_fill),
-            onPressed: onPlay,
+          StreamBuilder<PlayerState>(
+            stream: player.playerStateStream,
+            builder: (context, snapshot) {
+              final playing = snapshot.data?.playing ?? false;
+              return IconButton(
+                iconSize: 48,
+                icon: Icon(playing ? Icons.pause_circle_filled : Icons.play_circle_fill),
+                onPressed: () async {
+                  if (fileName == null) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Load an MP3 first')));
+                    return;
+                  }
+                  if (playing) { await player.pause(); } else { await player.play(); }
+                },
+              );
+            },
           ),
           const Text('Tempo'),
           Slider(
@@ -188,9 +266,13 @@ class _DJHomePageState extends State<DJHomePage> {
             max: 1.2,
             divisions: 20,
             label: '${(tempo * 128).toInt()} BPM',
-            onChanged: onTempo,
+            onChanged: (v) async {
+              setState(() {
+                if (isDeckA) tempoA = v; else tempoB = v;
+              });
+              await player.setSpeed(v);
+            },
           ),
-          Text('${(tempo * 128).toInt()} BPM'),
         ],
       ),
     );

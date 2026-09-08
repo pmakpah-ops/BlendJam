@@ -11,7 +11,7 @@ class BlendJamApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'BlendJam',
-      theme: ThemeData.dark().copyWith(
+      theme: ThemeData().copyWith(
         scaffoldBackgroundColor: const Color(0xFF121212),
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple, brightness: Brightness.dark),
       ),
@@ -50,8 +50,8 @@ class _DJPageState extends State<DJPage> {
   void dispose() { playerA.dispose(); playerB.dispose(); super.dispose(); }
 
   void _updateVolumes() {
-    playerA.setVolume(volA * (1.0 - crossfade * 0.9));
-    playerB.setVolume(volB * (0.1 + crossfade * 0.9));
+    playerA.setVolume(volA * (1.0 - crossfade) * 2.0 > 1.0? 1.0 : volA * (1.0 - crossfade) * 2.0);
+    playerB.setVolume(volB * (crossfade) * 2.0 > 1.0? 1.0 : volB * crossfade * 2.0);
   }
 
   Future<void> _loadToDeck(bool isDeckA) async {
@@ -64,17 +64,18 @@ class _DJPageState extends State<DJPage> {
           content: SizedBox(width: double.maxFinite, height: 300,
             child: ListView.builder(
               itemCount: queueNames.length + 1,
-              itemBuilder: (c,i){
-                if(i==queueNames.length) return ListTile(leading: const Icon(Icons.folder_open), title: const Text('Browse new file...'), onTap: ()=>Navigator.pop(ctx,-1));
-                return ListTile(leading: const Icon(Icons.music_note), title: Text(queueNames[i]), onTap: ()=>Navigator.pop(ctx,i));
-              })),
+              itemBuilder: (c,i) {
+                if(i==queueNames.length) return ListTile(leading: const Icon(Icons.folder_open), title: const Text('Browse files'), onTap: ()=>Navigator.pop(c,-1));
+                return ListTile(leading: const Icon(Icons.music_note), title: Text(queueNames[i]), onTap: ()=>Navigator.pop(c,i));
+              },
+            )),
         ));
       if(sel==null) return;
-      if(sel!=-1){ path=queuePaths[sel]; name=queueNames[sel]; }
+      if(sel==-1){ path=queuePaths[sel]; name=queueNames[sel]; }
     }
     if(path==null){
       FilePickerResult? r = await FilePicker.platform.pickFiles(type: FileType.audio, allowMultiple: false);
-      if(r!=null && r.files.single.path!=null){ path=r.files.single.path!; name=r.files.single.name; }
+      if(r!=null && r.files.single.path!=null){ path=r.files.single.path; name=r.files.single.name; }
     }
     if(path==null||name==null) return;
     try{
@@ -104,19 +105,16 @@ class _DJPageState extends State<DJPage> {
       await playerB.setSpeed(tempoB);
       setState(()=>fileBName=queueNames[autoMixIndex]);
       playerB.play();
-      // auto crossfade over 10s
-      for(int i=0;i<=10;i++){
+      for(int i=0;i<10;i++){
         await Future.delayed(const Duration(seconds: 1));
         if(!autoMix) break;
         setState(()=>crossfade = i/10);
         _updateVolumes();
       }
-      // swap decks: B becomes A
       await playerA.stop();
-      // simple swap: copy B to A logic by reloading
       await playerA.setFilePath(queuePaths[autoMixIndex]);
       playerA.play();
-      setState(()=>{fileAName = queueNames[autoMixIndex], crossfade = 0.0});
+      setState(()=>{fileAName=queueNames[autoMixIndex], crossfade = 0.0});
       _updateVolumes();
       isTransitioning = false;
     }
@@ -138,51 +136,3 @@ class _DJPageState extends State<DJPage> {
           }),
         );
       });
-  }
-
-  Widget _deck(bool isA){
-    final player = isA?playerA:playerB;
-    final name = isA?fileAName:fileBName;
-    final tempo = isA?tempoA:tempoB;
-    final vol = isA?volA:volB;
-    return Card(color: const Color(0xFF1E1E1E), child: Padding(padding: const EdgeInsets.all(12),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children:[
-        Row(children:[
-          CircleAvatar(backgroundColor: isA?Colors.deepPurple:Colors.orange, child: Text(isA?'A':'B', style: const TextStyle(color:Colors.white, fontWeight: FontWeight.bold))),
-          const SizedBox(width:8),
-          Expanded(child: Text(name?? 'No track', style: const TextStyle(fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis)),
-          IconButton(icon: const Icon(Icons.folder_open), onPressed: ()=>_loadToDeck(isA)),
-        ]),
-        const SizedBox(height:8),
-        _waveform(isA),
-        const SizedBox(height:8),
-        StreamBuilder<Duration?>(
-          stream: player.durationStream,
-          builder: (c,dsnap){
-            final dur = dsnap.data?? Duration.zero;
-            return StreamBuilder<Duration>(
-              stream: player.positionStream,
-              builder: (c2,psnap){
-                final pos = psnap.data?? Duration.zero;
-                String fmt(Duration d)=>"${d.inMinutes}:${(d.inSeconds%60).toString().padLeft(2,'0')}";
-                return Column(children:[
-                  Slider(value: dur.inMilliseconds>0? pos.inMilliseconds.clamp(0,dur.inMilliseconds).toDouble() : 0,
-                    max: dur.inMilliseconds>0?dur.inMilliseconds.toDouble():1,
-                    onChanged: (v)=>player.seek(Duration(milliseconds: v.toInt()))),
-                  Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children:[Text(fmt(pos)), Text(fmt(dur))]),
-                  Row(mainAxisAlignment: MainAxisAlignment.center, children:[
-                    IconButton(icon: const Icon(Icons.replay_10), onPressed: ()=>player.seek(Duration(seconds: (pos.inSeconds-10).clamp(0,99999)))),
-                    StreamBuilder<PlayerState>(stream: player.playerStateStream, builder: (c3,s){
-                      final playing = s.data?.playing?? false;
-                      return IconButton(iconSize: 48, icon: Icon(playing?Icons.pause_circle_filled:Icons.play_circle_filled),
-                        onPressed: ()=>playing?player.pause():player.play());
-                    }),
-                    IconButton(icon: const Icon(Icons.forward_10), onPressed: ()=>player.seek(Duration(seconds: pos.inSeconds+10))),
-                  ]),
-                ]);
-              });
-          }),
-        Row(children:[const Text('Tempo'), Expanded(child: Slider(value: tempo, min:0.5, max:1.5, divisions:20, label: "${tempo.toStringAsFixed(2)}x",
-          onChanged:(v){setState(()=>isA?tempoA=v:tempoB=v); player.setSpeed(v);} ))]),
-        Row(children:[const Text('Vol'), Expanded(child: Slider(value: vol, min:0, max:1,
-          onChanged:(v){set

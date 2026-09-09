@@ -21,7 +21,6 @@ class DJPage extends StatefulWidget {
 class DJState extends State<DJPage> {
   late AudioPlayer playerA; late AudioPlayer playerB;
   String? nameA; String? nameB;
-  double tempoA = 1.0; double tempoB = 1.0;
   double cross = 0.0;
   List<String> queuePaths = []; List<String> queueNames = [];
   bool autoMix = false; int autoMixIndex = -1;
@@ -32,7 +31,6 @@ class DJState extends State<DJPage> {
     super.initState();
     playerA = AudioPlayer(); playerB = AudioPlayer();
     updateVol();
-    // check every 500ms for 10s-to-end
     blendTimer = Timer.periodic(const Duration(milliseconds: 500), (_) => checkBlend());
   }
 
@@ -62,12 +60,9 @@ class DJState extends State<DJPage> {
     autoMixIndex = (autoMixIndex + 1) % queuePaths.length;
     String p = queuePaths[autoMixIndex]; String n = queueNames[autoMixIndex];
     await next.setFilePath(p);
-    if (next == playerA) { await playerA.setSpeed(tempoA); setState(()=> nameA = n); }
-    else { await playerB.setSpeed(tempoB); setState(()=> nameB = n); }
-    // start next silent
+    if (next == playerA) { setState(()=> nameA = n); } else { setState(()=> nameB = n); }
     if (next == playerA) { cross = 1.0; } else { cross = 0.0; }
     updateVol(); next.play();
-    // 10s fade: 20 steps x 500ms
     bool fadeToB = (next == playerB);
     for (int i = 0; i <= 20; i++) {
       if (!mounted ||!autoMix) break;
@@ -75,7 +70,6 @@ class DJState extends State<DJPage> {
       setState(()=> cross = fadeToB? i/20 : 1 - i/20);
       updateVol();
     }
-    // stop the old one
     current.stop();
     isBlending = false;
   }
@@ -87,8 +81,8 @@ class DJState extends State<DJPage> {
       if (r == null) return; p = r.files.single.path; n = r.files.single.name;
     }
     if (p == null) return;
-    if (isA) { await playerA.setFilePath(p); await playerA.setSpeed(tempoA); setState(()=> nameA = n); }
-    else { await playerB.setFilePath(p); await playerB.setSpeed(tempoB); setState(()=> nameB = n); }
+    if (isA) { await playerA.setFilePath(p); setState(()=> nameA = n); }
+    else { await playerB.setFilePath(p); setState(()=> nameB = n); }
     updateVol();
   }
 
@@ -101,23 +95,60 @@ class DJState extends State<DJPage> {
   Future<void> startQueueAuto() async {
     if (queuePaths.isEmpty) return;
     autoMixIndex = 0; isBlending = false;
-    await playerA.setFilePath(queuePaths[0]); await playerA.setSpeed(tempoA);
+    await playerA.setFilePath(queuePaths[0]);
     await playerB.stop();
     setState(()=> { nameA = queueNames[0], nameB = null, cross = 0.0, autoMix = true });
     updateVol(); playerA.play();
   }
 
+  String fmt(Duration d) {
+    String two(int n) => n.toString().padLeft(2,'0');
+    return "${two(d.inMinutes)}:${two(d.inSeconds%60)}";
+  }
+
+  Widget progressBar(AudioPlayer player) {
+    return StreamBuilder<Duration>(
+      stream: player.positionStream,
+      builder: (context, snapPos) {
+        final pos = snapPos.data?? Duration.zero;
+        final dur = player.duration?? Duration.zero;
+        final maxMs = dur.inMilliseconds.toDouble();
+        final posMs = pos.inMilliseconds.toDouble().clamp(0.0, maxMs == 0? 1.0 : maxMs);
+        return Column(
+          children: [
+            Slider(
+              value: maxMs == 0? 0 : posMs,
+              min: 0,
+              max: maxMs == 0? 1 : maxMs,
+              onChanged: (v) {
+                player.seek(Duration(milliseconds: v.toInt()));
+              },
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(fmt(pos), style: const TextStyle(fontSize: 11)),
+                Text(fmt(dur), style: const TextStyle(fontSize: 11)),
+              ],
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Widget buildDeck(bool isA) {
-    String? nm = isA? nameA : nameB; double tp = isA? tempoA : tempoB; AudioPlayer pl = isA? playerA : playerB;
+    String? nm = isA? nameA : nameB;
+    AudioPlayer pl = isA? playerA : playerB;
     return Card(child: Padding(padding: const EdgeInsets.all(12), child: Column(children: [
-      Text(isA?'DECK A':'DECK B'), Text(nm??'No track'),
+      Text(isA?'DECK A':'DECK B', style: const TextStyle(fontWeight: FontWeight.bold)),
+      Text(nm??'No track', overflow: TextOverflow.ellipsis),
       Row(mainAxisAlignment: MainAxisAlignment.center, children: [
         IconButton(icon: const Icon(Icons.folder_open), onPressed: ()=> load(isA)),
         IconButton(icon: const Icon(Icons.play_arrow), onPressed: ()=> pl.play()),
         IconButton(icon: const Icon(Icons.pause), onPressed: ()=> pl.pause()),
       ]),
-      Row(children: [ const Text('Tempo'), Expanded(child: Slider(value: tp, min: 0.5, max: 1.5,
-        onChanged: (v){ setState(()=> isA? tempoA=v : tempoB=v); pl.setSpeed(v); })) ]),
+      progressBar(pl),
     ])));
   }
 
@@ -142,7 +173,7 @@ class DJState extends State<DJPage> {
             ]),
           ]),
           for(int i=0;i<queueNames.length;i++) ListTile(dense:true, title: Text(queueNames[i]),
-            subtitle: i==autoMixIndex? const Text('Now blending'):null,
+            subtitle: i==autoMixIndex? const Text('Now playing / blending'):null,
             trailing: Row(mainAxisSize: MainAxisSize.min, children:[
               IconButton(icon: const Icon(Icons.play_arrow), onPressed: ()=> load(true, queuePaths[i], queueNames[i])),
               IconButton(icon: const Icon(Icons.arrow_downward), onPressed: ()=> load(false, queuePaths[i], queueNames[i])),

@@ -31,7 +31,6 @@ class DJState extends State<DJPage> {
   double tempoA = 1.0;
   double tempoB = 1.0;
   double cross = 0.5;
-
   List<String> queuePaths = [];
   List<String> queueNames = [];
   bool autoMix = false;
@@ -115,9 +114,9 @@ class DJState extends State<DJPage> {
     var pos = playerA.position;
     if ((dur - pos).inSeconds < 15) {
       isTransitioning = true;
+      setState(() {});
       autoMixIndex = (autoMixIndex + 1) % queuePaths.length;
       await playerB.setFilePath(queuePaths[autoMixIndex]);
-      await playerB.setSpeed(tempoB);
       setState(() {
         nameB = queueNames[autoMixIndex];
       });
@@ -137,27 +136,22 @@ class DJState extends State<DJPage> {
       setState(() {
         nameA = queueNames[autoMixIndex];
         cross = 0;
+        isTransitioning = false;
       });
       updateVol();
-      isTransitioning = false;
     }
   }
 
-  Widget deck(bool isA) {
-    AudioPlayer pl = isA? playerA : playerB;
+  Widget buildDeck(bool isA) {
     String? nm = isA? nameA : nameB;
     double tp = isA? tempoA : tempoB;
-    Color c = isA? Colors.deepPurple : Colors.orange;
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(12),
         child: Column(
           children: [
             Text(isA? 'DECK A' : 'DECK B'),
-            Text(
-              nm?? 'No track',
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
+            Text(nm?? 'No track'),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -167,8 +161,166 @@ class DJState extends State<DJPage> {
                     load(isA);
                   },
                 ),
-                StreamBuilder<PlayerState>(
-                  stream: pl.playerStateStream,
-                  builder: (ctx, snap) {
-                    bool playing = snap.data?.playing?? false;
-                    return IconButton(
+                IconButton(
+                  icon: const Icon(Icons.play_arrow),
+                  onPressed: () {
+                    if (isA) {
+                      playerA.play();
+                    } else {
+                      playerB.play();
+                    }
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(Icons.pause),
+                  onPressed: () {
+                    if (isA) {
+                      playerA.pause();
+                    } else {
+                      playerB.pause();
+                    }
+                  },
+                ),
+              ],
+            ),
+            Row(
+              children: [
+                const Text('Tempo'),
+                Expanded(
+                  child: Slider(
+                    value: tp,
+                    min: 0.5,
+                    max: 1.5,
+                    onChanged: (v) {
+                      setState(() {
+                        if (isA) {
+                          tempoA = v;
+                        } else {
+                          tempoB = v;
+                        }
+                      });
+                      if (isA) {
+                        playerA.setSpeed(v);
+                      } else {
+                        playerB.setSpeed(v);
+                      }
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget buildQueue() {
+    if (queueNames.isEmpty) {
+      return OutlinedButton.icon(
+        icon: const Icon(Icons.add),
+        label: const Text('Add songs to queue'),
+        onPressed: addToQueue,
+      );
+    }
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(8),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('Up Next'),
+                TextButton(
+                  onPressed: () {
+                    setState(() {
+                      queuePaths.clear();
+                      queueNames.clear();
+                    });
+                  },
+                  child: const Text('Clear'),
+                ),
+              ],
+            ),
+            Column(
+              children: List.generate(queueNames.length, (i) {
+                return ListTile(
+                  dense: true,
+                  title: Text(queueNames[i]),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.play_arrow),
+                        onPressed: () {
+                          load(true, queuePaths[i], queueNames[i]);
+                        },
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.arrow_downward),
+                        onPressed: () {
+                          load(false, queuePaths[i], queueNames[i]);
+                        },
+                      ),
+                    ],
+                  ),
+                );
+              }),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('BlendJam'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.queue_music),
+            onPressed: addToQueue,
+          ),
+          const Text('Auto'),
+          Switch(
+            value: autoMix,
+            onChanged: (v) {
+              setState(() {
+                autoMix = v;
+              });
+            },
+          ),
+        ],
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(12),
+        children: [
+          buildDeck(true),
+          Row(
+            children: [
+              const Text('A'),
+              Expanded(
+                child: Slider(
+                  value: cross,
+                  onChanged: (v) {
+                    setState(() {
+                      cross = v;
+                    });
+                    updateVol();
+                  },
+                ),
+              ),
+              const Text('B'),
+            ],
+          ),
+          buildDeck(false),
+          const SizedBox(height: 12),
+          buildQueue(),
+        ],
+      ),
+    );
+  }
+}

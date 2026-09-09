@@ -14,10 +14,10 @@ workflows:
       - name: Flutter clean
         script: |
           flutter clean
+          flutter pub get
       - name: Generate app icons
         script: |
-          flutter pub get
-          dart run flutter_launcher_icons
+          flutter pub run flutter_launcher_icons
       - name: Build APK
         script: |
           flutter build apk --release

@@ -43,7 +43,9 @@ class DJState extends State<DJPage> {
     super.initState();
     playerA = AudioPlayer();
     playerB = AudioPlayer();
-    playerA.positionStream.listen((_) => checkAutoMix());
+    playerA.positionStream.listen((_) {
+      checkAutoMix();
+    });
   }
 
   @override
@@ -75,17 +77,24 @@ class DJState extends State<DJPage> {
     if (isA) {
       await playerA.setFilePath(p);
       await playerA.setSpeed(tempoA);
-      setState(() => nameA = n);
+      setState(() {
+        nameA = n;
+      });
     } else {
       await playerB.setFilePath(p);
       await playerB.setSpeed(tempoB);
-      setState(() => nameB = n);
+      setState(() {
+        nameB = n;
+      });
     }
     updateVol();
   }
 
   Future<void> addToQueue() async {
-    var r = await FilePicker.platform.pickFiles(type: FileType.audio, allowMultiple: true);
+    var r = await FilePicker.platform.pickFiles(
+      type: FileType.audio,
+      allowMultiple: true,
+    );
     if (r == null) return;
     setState(() {
       for (var f in r.files) {
@@ -98,7 +107,9 @@ class DJState extends State<DJPage> {
   }
 
   void checkAutoMix() async {
-    if (!autoMix || isTransitioning || queuePaths.isEmpty) return;
+    if (!autoMix) return;
+    if (isTransitioning) return;
+    if (queuePaths.isEmpty) return;
     var dur = playerA.duration;
     if (dur == null) return;
     var pos = playerA.position;
@@ -107,12 +118,17 @@ class DJState extends State<DJPage> {
       autoMixIndex = (autoMixIndex + 1) % queuePaths.length;
       await playerB.setFilePath(queuePaths[autoMixIndex]);
       await playerB.setSpeed(tempoB);
-      setState(() => nameB = queueNames[autoMixIndex]);
+      setState(() {
+        nameB = queueNames[autoMixIndex];
+      });
       playerB.play();
       for (int i = 0; i <= 10; i++) {
         await Future.delayed(const Duration(seconds: 1));
-        if (!mounted ||!autoMix) break;
-        setState(() => cross = i / 10);
+        if (!mounted) break;
+        if (!autoMix) break;
+        setState(() {
+          cross = i / 10;
+        });
         updateVol();
       }
       await playerA.stop();
@@ -138,94 +154,21 @@ class DJState extends State<DJPage> {
         child: Column(
           children: [
             Text(isA? 'DECK A' : 'DECK B'),
-            Text(nm?? 'No track', style: const TextStyle(fontWeight: FontWeight.bold)),
+            Text(
+              nm?? 'No track',
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                IconButton(icon: const Icon(Icons.folder_open), onPressed: () => load(isA)),
+                IconButton(
+                  icon: const Icon(Icons.folder_open),
+                  onPressed: () {
+                    load(isA);
+                  },
+                ),
                 StreamBuilder<PlayerState>(
                   stream: pl.playerStateStream,
                   builder: (ctx, snap) {
                     bool playing = snap.data?.playing?? false;
                     return IconButton(
-                      icon: Icon(playing? Icons.pause : Icons.play_arrow, color: c, size: 32),
-                      onPressed: () => playing? pl.pause() : pl.play(),
-                    );
-                  },
-                ),
-              ],
-            ),
-            Row(
-              children: [
-                const Text('Tempo'),
-                Expanded(
-                  child: Slider(
-                    value: tp,
-                    min: 0.5,
-                    max: 1.5,
-                    onChanged: (v) {
-                      setState(() { if (isA) tempoA = v; else tempoB = v; });
-                      pl.setSpeed(v);
-                    },
-                  ),
-                ),
-                Text('${tp.toStringAsFixed(2)}x'),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('BlendJam'),
-        actions: [
-          IconButton(
-            icon: Badge(label: Text('${queueNames.length}'), child: const Icon(Icons.queue_music)),
-            onPressed: addToQueue,
-          ),
-          Row(
-            children: [
-              const Text('Auto', style: TextStyle(fontSize: 12)),
-              Switch(value: autoMix, onChanged: (v) => setState(() => autoMix = v)),
-            ],
-          ),
-        ],
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(12),
-        children: [
-          deck(true),
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 4),
-            child: Row(
-              children: [
-                const Text('A'),
-                Expanded(
-                  child: Slider(
-                    value: cross,
-                    onChanged: (v) { setState(() => cross = v); updateVol(); },
-                  ),
-                ),
-                const Text('B'),
-              ],
-            ),
-          ),
-          if (isTransitioning) const LinearProgressIndicator(),
-          deck(false),
-          const SizedBox(height: 12),
-          if (queueNames.isNotEmpty)
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(8),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text('Up Next (${queueNames.length})', style: const

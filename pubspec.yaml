@@ -1,5 +1,5 @@
 name: blendjam
-description: BlendJam DJ Mixer - Real Audio Player
+description: BlendJam DJ Mixer - Real Audio
 publish_to: 'none'
 version: 1.0.0+1
 
@@ -22,9 +22,10 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-    - assets/IMG-20260908-WA2613.jpg
+    - assets/icon.png
 
 flutter_launcher_icons:
   android: true
   ios: true
-  image_path: "assets/IMG-20260908-WA2613.jpg"
+  image_path: "assets/icon.png"
+  min_sdk_android: 21

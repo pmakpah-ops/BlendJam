@@ -12,7 +12,10 @@ dependencies:
   cupertino_icons: ^1.0.6
   just_audio: ^0.9.46
   file_picker: ^8.1.2
-  ffmpeg_kit_flutter_new_min: ^4.1.0
+  ffmpeg_kit_flutter_new:
+    git:
+      url: https://github.com/nightmarefsm007/ffmpeg_kit_flutter
+      ref: minimal
 
 dev_dependencies:
   flutter_test:

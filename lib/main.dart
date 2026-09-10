@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:ffmpeg_kit_flutter/ffmpeg_kit.dart';
+import 'package:ffmpeg_kit_flutter_new/ffmpeg_kit.dart';
 
 void main() => runApp(const BlendJamApp());
 
@@ -54,10 +54,7 @@ class DJState extends State<DJPage> {
       final durRegex = RegExp(r'silence_duration:\s*([\d.]+)');
       final matches = durRegex.allMatches(logs).toList();
       if (matches.isEmpty) return 0.0;
-      // Take last silence chunk as trailing silence, clamp 0-12s
       final lastDur = double.tryParse(matches.last.group(1)?? '0')?? 0.0;
-      // Only trust it if it appears near the end of logs (heuristic)
-      // Simple: return it clamped
       return lastDur.clamp(0.0, 12.0).toDouble();
     } catch (_) {
       return 5.0;
@@ -122,7 +119,6 @@ class DJState extends State<DJPage> {
         }
       }
     });
-    // Analyze trailing silence in background
     for (var p in queuePaths) {
       if (!silenceMap.containsKey(p)) {
         detectTrailingSilence(p).then((s) {
@@ -197,29 +193,4 @@ class DJState extends State<DJPage> {
       appBar: AppBar(title: const Text('BlendJam'), actions: [
         IconButton(icon: const Icon(Icons.queue_music), onPressed: addToQueue),
         const Center(child: Text('Auto', style: TextStyle(fontSize:12))),
-        Switch(value: autoMix, onChanged: (v){ setState(()=> autoMix=v); if(v && queuePaths.isNotEmpty) startQueueAuto(); }),
-      ]),
-      body: ListView(padding: const EdgeInsets.all(12), children: [
-        buildDeck(true),
-        Row(children:[ const Text('A'), Expanded(child: Slider(value: cross, onChanged: (v){ setState(()=> cross=v); updateVol(); })), const Text('B') ]),
-        buildDeck(false), const SizedBox(height:12),
-        if (queueNames.isEmpty) OutlinedButton.icon(icon: const Icon(Icons.add), label: const Text('Add songs to queue'), onPressed: addToQueue)
-        else Card(child: Column(children:[
-          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children:[
-            const Padding(padding: EdgeInsets.all(8), child: Text('Up Next')),
-            Row(children:[
-              TextButton(onPressed: startQueueAuto, child: const Text('Play All Auto')),
-              TextButton(onPressed: ()=> setState(()=> {queuePaths.clear(), queueNames.clear(), autoMixIndex=-1}), child: const Text('Clear')),
-            ]),
-          ]),
-          for(int i=0;i<queueNames.length;i++) ListTile(dense:true, title: Text(queueNames[i]),
-            subtitle: i==autoMixIndex? const Text('Now playing / blending') : null,
-            trailing: Row(mainAxisSize: MainAxisSize.min, children:[
-              IconButton(icon: const Icon(Icons.play_arrow), onPressed: ()=> load(true, queuePaths[i], queueNames[i])),
-              IconButton(icon: const Icon(Icons.arrow_downward), onPressed: ()=> load(false, queuePaths[i], queueNames[i])),
-            ])),
-        ])),
-      ]),
-    );
-  }
-}
+        Switch(value

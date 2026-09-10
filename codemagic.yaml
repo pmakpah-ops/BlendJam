@@ -18,9 +18,9 @@ workflows:
           dart run flutter_launcher_icons
       - name: Build APK
         script: |
-          flutter build apk --release
+          flutter build apk --release --split-per-abi
     artifacts:
-      - build/app/outputs/flutter-apk
+      - build/app/outputs/flutter-apk/*.apk
     publishing:
       email:
         recipients:

@@ -12,7 +12,7 @@ dependencies:
   cupertino_icons: ^1.0.6
   just_audio: ^0.9.46
   file_picker: ^8.1.2
-  ffmpeg_kit_flutter: ^6.0.3
+  ffmpeg_kit_flutter_new: ^4.1.0
 
 dev_dependencies:
   flutter_test:

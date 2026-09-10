@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:ffmpeg_kit_flutter/ffmpeg_kit.dart';
 
 void main() => runApp(const BlendJamApp());
 
@@ -25,6 +26,7 @@ class DJState extends State<DJPage> {
   List<String> queuePaths = []; List<String> queueNames = [];
   bool autoMix = false; int autoMixIndex = -1;
   bool isBlending = false; Timer? blendTimer;
+  Map<String, double> silenceMap = {}; // path -> trailing silence secs
 
   @override
   void initState() {
@@ -42,6 +44,26 @@ class DJState extends State<DJPage> {
     playerA.setVolume(a); playerB.setVolume(b);
   }
 
+  Future<double> detectTrailingSilence(String path) async {
+    try {
+      final session = await FFmpegKit.execute(
+        '-i "$path" -af silencedetect=noise=-60dB:d=1 -f null -'
+      );
+      final logs = await session.getAllLogsAsString();
+      if (logs == null || logs.isEmpty) return 5.0;
+      final durRegex = RegExp(r'silence_duration:\s*([\d.]+)');
+      final matches = durRegex.allMatches(logs).toList();
+      if (matches.isEmpty) return 0.0;
+      // Take last silence chunk as trailing silence, clamp 0-12s
+      final lastDur = double.tryParse(matches.last.group(1)?? '0')?? 0.0;
+      // Only trust it if it appears near the end of logs (heuristic)
+      // Simple: return it clamped
+      return lastDur.clamp(0.0, 12.0).toDouble();
+    } catch (_) {
+      return 5.0;
+    }
+  }
+
   Future<void> checkBlend() async {
     if (!autoMix || isBlending || queuePaths.isEmpty) return;
     AudioPlayer current = (cross < 0.5)? playerA : playerB;
@@ -49,7 +71,10 @@ class DJState extends State<DJPage> {
     final dur = current.duration; final pos = current.position;
     if (dur == null) return;
     final remaining = dur - pos;
-    if (remaining.inSeconds <= 10 && remaining.inSeconds > 0) {
+    String curPath = queuePaths[autoMixIndex.clamp(0, queuePaths.length - 1)];
+    final silence = silenceMap[curPath]?? 5.0;
+    final triggerSecs = 10 + silence;
+    if (remaining.inSeconds <= triggerSecs && remaining.inSeconds > 0) {
       startBlend(current);
     }
   }
@@ -70,7 +95,7 @@ class DJState extends State<DJPage> {
       setState(()=> cross = fadeToB? i/20 : 1 - i/20);
       updateVol();
     }
-    current.stop();
+    await current.stop();
     isBlending = false;
   }
 
@@ -88,8 +113,23 @@ class DJState extends State<DJPage> {
 
   Future<void> addToQueue() async {
     var r = await FilePicker.platform.pickFiles(type: FileType.audio, allowMultiple: true);
-    if (r==null) return;
-    setState(()=> { for (var f in r.files) if (f.path!=null) { queuePaths.add(f.path!), queueNames.add(f.name) } });
+    if (r == null) return;
+    setState(() {
+      for (var f in r.files) {
+        if (f.path!= null) {
+          queuePaths.add(f.path!);
+          queueNames.add(f.name);
+        }
+      }
+    });
+    // Analyze trailing silence in background
+    for (var p in queuePaths) {
+      if (!silenceMap.containsKey(p)) {
+        detectTrailingSilence(p).then((s) {
+          if (mounted) setState(() => silenceMap[p] = s);
+        });
+      }
+    }
   }
 
   Future<void> startQueueAuto() async {
@@ -141,8 +181,8 @@ class DJState extends State<DJPage> {
     String? nm = isA? nameA : nameB;
     AudioPlayer pl = isA? playerA : playerB;
     return Card(child: Padding(padding: const EdgeInsets.all(12), child: Column(children: [
-      Text(isA?'DECK A':'DECK B', style: const TextStyle(fontWeight: FontWeight.bold)),
-      Text(nm??'No track', overflow: TextOverflow.ellipsis),
+      Text(isA? 'DECK A' : 'DECK B', style: const TextStyle(fontWeight: FontWeight.bold)),
+      Text(nm?? 'No track', overflow: TextOverflow.ellipsis),
       Row(mainAxisAlignment: MainAxisAlignment.center, children: [
         IconButton(icon: const Icon(Icons.folder_open), onPressed: ()=> load(isA)),
         IconButton(icon: const Icon(Icons.play_arrow), onPressed: ()=> pl.play()),
@@ -173,7 +213,7 @@ class DJState extends State<DJPage> {
             ]),
           ]),
           for(int i=0;i<queueNames.length;i++) ListTile(dense:true, title: Text(queueNames[i]),
-            subtitle: i==autoMixIndex? const Text('Now playing / blending'):null,
+            subtitle: i==autoMixIndex? const Text('Now playing / blending') : null,
             trailing: Row(mainAxisSize: MainAxisSize.min, children:[
               IconButton(icon: const Icon(Icons.play_arrow), onPressed: ()=> load(true, queuePaths[i], queueNames[i])),
               IconButton(icon: const Icon(Icons.arrow_downward), onPressed: ()=> load(false, queuePaths[i], queueNames[i])),

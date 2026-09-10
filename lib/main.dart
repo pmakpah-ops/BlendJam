@@ -1,8 +1,9 @@
 import 'dart:async';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:ffmpeg_kit_flutter_new/ffmpeg_kit.dart';
+import 'package:ffmpeg_kit_flutter_new_min/ffmpeg_kit.dart';
 
 void main() => runApp(const BlendJamApp());
 
@@ -17,6 +18,45 @@ class BlendJamApp extends StatelessWidget {
 class DJPage extends StatefulWidget {
   const DJPage({super.key});
   @override State<DJPage> createState() => DJState();
+}
+
+class MiniBars extends StatefulWidget {
+  final AudioPlayer player;
+  const MiniBars({super.key, required this.player});
+  @override State<MiniBars> createState() => _MiniBarsState();
+}
+
+class _MiniBarsState extends State<MiniBars> {
+  late Timer t;
+  final Random rnd = Random();
+  List<double> heights = List.filled(24, 4.0);
+  @override
+  void initState() {
+    super.initState();
+    t = Timer.periodic(const Duration(milliseconds: 120), (_) {
+      if (!mounted) return;
+      if (!widget.player.playing) return;
+      setState(() {
+        for (int i=0;i<heights.length;i++) {
+          heights[i] = 4 + rnd.nextDouble() * 28;
+        }
+      });
+    });
+  }
+  @override void dispose(){ t.cancel(); super.dispose(); }
+  @override Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: heights.map((h) => Container(
+          width: 4, height: h,
+          margin: const EdgeInsets.symmetric(horizontal: 1.5),
+          decoration: BoxDecoration(color: Colors.purpleAccent, borderRadius: BorderRadius.circular(2)),
+        )).toList(),
+      ),
+    );
+  }
 }
 
 class DJState extends State<DJPage> {
@@ -179,6 +219,7 @@ class DJState extends State<DJPage> {
     return Card(child: Padding(padding: const EdgeInsets.all(12), child: Column(children: [
       Text(isA? 'DECK A' : 'DECK B', style: const TextStyle(fontWeight: FontWeight.bold)),
       Text(nm?? 'No track', overflow: TextOverflow.ellipsis),
+      MiniBars(player: pl),
       Row(mainAxisAlignment: MainAxisAlignment.center, children: [
         IconButton(icon: const Icon(Icons.folder_open), onPressed: ()=> load(isA)),
         IconButton(icon: const Icon(Icons.play_arrow), onPressed: ()=> pl.play()),

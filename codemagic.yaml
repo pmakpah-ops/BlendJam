@@ -6,21 +6,32 @@ workflows:
     environment:
       flutter: 3.47.3
     scripts:
+      - name: Install Android SDK 36
+        script: |
+          # Accept licenses and install Platform 36 + Build-Tools 36
+          yes | sdkmanager --licenses
+          sdkmanager "platforms;android-36" "build-tools;36.0.0" "platform-tools"
+
       - name: Install dependencies
         script: |
           flutter pub get
+
       - name: Flutter clean
         script: |
           flutter clean
           flutter pub get
+
       - name: Generate app icons
         script: |
           dart run flutter_launcher_icons
+
       - name: Build APK
         script: |
           flutter build apk --release --split-per-abi --android-skip-build-dependency-validation
+
     artifacts:
       - build/app/outputs/flutter-apk/*.apk
+
     publishing:
       email:
         recipients:

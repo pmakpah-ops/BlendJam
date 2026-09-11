@@ -1,8 +1,8 @@
 buildscript {
     ext {
-        compileSdkVersion = 36  // <- FORCE 36
-        targetSdkVersion = 36   // <- FORCE 36
-        minSdkVersion = 23      // <- FORCE 23 for ffmpeg_kit
+        compileSdkVersion = 36
+        targetSdkVersion = 36
+        minSdkVersion = 23
     }
     repositories {
         google()
@@ -24,6 +24,16 @@ rootProject.buildDir = '../build'
 subprojects {
     project.buildDir = "${rootProject.buildDir}/${project.name}"
     project.evaluationDependsOn(':app')
+    
+    // NUCLEAR OPTION: Force every plugin to use 36
+    afterEvaluate { project ->
+        if (project.hasProperty("android")) {
+            android {
+                compileSdkVersion 36
+                buildToolsVersion "36.0.0"
+            }
+        }
+    }
 }
 
 tasks.register("clean", Delete) {

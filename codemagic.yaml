@@ -8,9 +8,10 @@ workflows:
     scripts:
       - name: Install Android SDK 36
         script: |
-          # Accept licenses and install Platform 36 + Build-Tools 36
-          yes | sdkmanager --licenses
-          sdkmanager "platforms;android-36" "build-tools;36.0.0" "platform-tools"
+          # This is the Codemagic way to install SDKs
+          flutter doctor --android-licenses
+          flutter precache --android
+          $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager "platforms;android-36" "build-tools;36.0.0"
 
       - name: Install dependencies
         script: |

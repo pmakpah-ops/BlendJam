@@ -5,6 +5,13 @@ workflows:
     instance_type: mac_mini_m2
     environment:
       flutter: 3.47.3
+      vars:
+        GRADLE_OPTS: -Dorg.gradle.jvmargs="-Xmx4g -Dfile.encoding=UTF-8" -Dorg.gradle.daemon=true -Dorg.gradle.parallel=true
+    cache:
+      cache_paths:
+        - $FLUTTER_ROOT/.pub-cache
+        - $HOME/.gradle/caches
+        - $HOME/.gradle/wrapper
     scripts:
       - name: Install Android SDK 36
         script: |

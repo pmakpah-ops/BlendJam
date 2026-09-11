@@ -42,7 +42,7 @@ workflows:
 
       - name: Build APK
         script: |
-          flutter build apk --release --split-per-abi --android-skip-build-dependency-validation
+          flutter build apk --release --split-per-abi --android-skip-build-dependency-validation --no-tree-shake-icons  # <- ADDED THIS FLAG
 
     artifacts:
       - build/app/outputs/flutter-apk/*.apk

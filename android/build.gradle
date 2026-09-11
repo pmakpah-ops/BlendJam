@@ -1,3 +1,18 @@
+buildscript {
+    ext {
+        compileSdkVersion = 36  // <- FORCE 36
+        targetSdkVersion = 36   // <- FORCE 36
+        minSdkVersion = 23      // <- FORCE 23 for ffmpeg_kit
+    }
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:2.0.0"
+    }
+}
+
 allprojects {
     repositories {
         google()
@@ -8,8 +23,6 @@ allprojects {
 rootProject.buildDir = '../build'
 subprojects {
     project.buildDir = "${rootProject.buildDir}/${project.name}"
-}
-subprojects {
     project.evaluationDependsOn(':app')
 }
 

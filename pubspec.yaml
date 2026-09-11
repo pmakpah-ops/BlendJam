@@ -12,13 +12,13 @@ dependencies:
   cupertino_icons: ^1.0.6
   just_audio: ^0.9.46
   file_picker: ^8.1.2
-  ffmpeg_kit_flutter: ^6.0.3  # <- CHANGED: stable version instead of broken git fork
+  ffmpeg_kit_flutter: ^6.0.3  # <- Requires compileSdk 36, minSdk 23
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^3.0.0
-  flutter_launcher_icons: ^0.14.3
+  flutter_launcher_icons: ^0.14.3  # <- NEW: supports compileSdk 36
 
 flutter:
   uses-material-design: true
@@ -29,4 +29,4 @@ flutter_launcher_icons:
   android: true
   ios: false
   image_path: "assets/icon.png"
-  min_sdk_android: 21
+  min_sdk_android: 23  # <- CHANGED FROM 21 TO 23. ffmpeg_kit needs 23+

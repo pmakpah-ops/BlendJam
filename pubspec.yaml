@@ -10,8 +10,8 @@ dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.6
-  just_audio: ^0.9.47
-  file_picker: ^10.2.0
+  just_audio: ^0.10.6  # <- FIXED: was 0.9.47. This version supports compileSdk 36
+  file_picker: ^10.2.0 # <- FIXED: supports compileSdk 36
   ffmpeg_kit_flutter: ^6.0.3
 
 dev_dependencies:

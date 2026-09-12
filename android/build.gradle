@@ -5,21 +5,13 @@ buildscript {
         minSdkVersion = 23
         buildToolsVersion = "36.0.0"
     }
-    repositories {
-        google()
-        mavenCentral()
-    }
+    // REMOVED repositories here
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:2.0.0"
     }
 }
 
-allprojects {
-    repositories {
-        google()
-        mavenCentral()
-    }
-}
+// REMOVED allprojects block
 
 rootProject.buildDir = '../build'
 subprojects {

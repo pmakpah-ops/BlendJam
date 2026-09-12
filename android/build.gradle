@@ -5,7 +5,7 @@ buildscript {
         minSdkVersion = 23
         buildToolsVersion = "36.0.0"
     }
-    repositories { // <- ADD THIS BACK for kotlin
+    repositories {
         google()
         mavenCentral()
     }
@@ -13,8 +13,6 @@ buildscript {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:2.0.0"
     }
 }
-
-// NO allprojects block here
 
 rootProject.buildDir = '../build'
 subprojects {

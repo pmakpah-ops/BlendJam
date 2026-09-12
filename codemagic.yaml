@@ -24,8 +24,11 @@ workflows:
           flutter doctor --android-licenses
           flutter precache --android
           $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager "platforms;android-36" "build-tools;36.0.0"
-          # NUCLEAR: Uninstall 35 so gradle can't download it
           yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --uninstall "build-tools;35.0.0" || true
+
+      - name: Block SDK 35
+        script: |
+          chmod -w android/gradle.properties
 
       - name: Install dependencies
         script: |
@@ -42,7 +45,7 @@ workflows:
 
       - name: Build APK
         script: |
-          flutter build apk --release --split-per-abi --android-skip-build-dependency-validation --no-tree-shake-icons  # <- ADDED THIS FLAG
+          flutter build apk --release --split-per-abi --android-skip-build-dependency-validation --no-tree-shake-icons
 
     artifacts:
       - build/app/outputs/flutter-apk/*.apk

@@ -23,8 +23,8 @@ plugins {
     id "org.jetbrains.kotlin.android" version "2.2.20" apply false
 }
 
-dependencyResolutionManagement { // <- ADD THIS WHOLE BLOCK
-    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS) // <- THIS BLOCKS PLUGINS FROM FORCING SDK 35
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS) // <- BLOCKS PLUGINS
     repositories {
         google()
         mavenCentral()

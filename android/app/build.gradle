@@ -1,25 +1,8 @@
-def localProperties = new Properties()
-def localPropertiesFile = rootProject.file('local.properties')
-if (localPropertiesFile.exists()) {
-    localPropertiesFile.withReader('UTF-8') { reader ->
-        localProperties.load(reader)
-    }
-}
-
-def flutterRoot = localProperties.getProperty('flutter.sdk')
-if (flutterRoot == null) {
-    throw new GradleException("Flutter SDK not found. Define location with flutter.sdk in the local.properties file.")
-}
-
-apply plugin: 'com.android.application'
-apply plugin: 'kotlin-android'
-apply from: "$flutterRoot/packages/flutter_tools/gradle/flutter.gradle"
-
 android {
-    namespace "com.pmakpah.blendjam" // change to your app id
-    compileSdkVersion 36 // <- FORCED 36
-    buildToolsVersion "36.0.0" // <- FORCED 36
-    ndkVersion "26.1.10909125" // <- FOR ffmpeg_kit
+    namespace "com.pmakpah.blendjam"
+    compileSdkVersion 36
+    buildToolsVersion "36.0.0"
+    ndkVersion "26.1.10909125"
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
@@ -31,9 +14,9 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.pmakpah.blendjam" // change to your app id
-        minSdkVersion 23 // <- MUST BE 23 for ffmpeg_kit
-        targetSdkVersion 36 // <- FORCED 36
+        applicationId "com.pmakpah.blendjam"
+        minSdkVersion 23 // <- ffmpeg_kit needs 23
+        targetSdkVersion 36
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
     }

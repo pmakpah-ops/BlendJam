@@ -4,49 +4,14 @@ workflows:
     max_build_duration: 60
     instance_type: mac_mini_m2
     environment:
-      flutter: 3.47.3
-      vars:
-        GRADLE_OPTS: -Dorg.gradle.jvmargs="-Xmx4g -Dfile.encoding=UTF-8" -Dorg.gradle.daemon=true -Dorg.gradle.parallel=true
-    cache:
-      cache_paths:
-        - $FLUTTER_ROOT/.pub-cache
-        - $HOME/.gradle/caches
-        - $HOME/.gradle/wrapper
+      flutter: 3.24.5
     scripts:
-      - name: Deep Clean
+      - name: Create fresh android
         script: |
-          flutter clean
-          rm -rf android/.gradle
-          rm -rf $HOME/.gradle/caches
-
-      - name: Install Android SDK 36
-        script: |
-          flutter doctor --android-licenses
-          flutter precache --android
-          $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager "platforms;android-36" "build-tools;36.0.0"
-          yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --uninstall "build-tools;35.0.0" || true
-
-      - name: Install dependencies # <- DELETED "Block SDK 35"
-        script: |
-          flutter pub get
-
-      - name: Flutter clean
-        script: |
-          flutter clean
-          flutter pub get
-
-      - name: Generate app icons
-        script: |
-          dart run flutter_launcher_icons
-
+          flutter create --org com.blendjam --project-name blendjam --platforms android . --overwrite
+      - name: Get packages
+        script: flutter pub get
       - name: Build APK
-        script: |
-          flutter build apk --release --split-per-abi --android-skip-build-dependency-validation --no-tree-shake-icons
-
+        script: flutter build apk --release
     artifacts:
       - build/app/outputs/flutter-apk/*.apk
-
-    publishing:
-      email:
-        recipients:
-          - pmakpah@gmail.com

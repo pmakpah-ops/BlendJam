@@ -1,14 +1,23 @@
 workflows:
-  android-release:
-    name: BlendJam Android Release
+  default-workflow:
+    name: Default
     max_build_duration: 60
     instance_type: mac_mini_m2
     environment:
       flutter: 3.24.5
+      xcode: latest
+      cocoapods: default
     scripts:
-      - name: Create fresh android
+      - name: Get REAL BlendJam code
         script: |
-          flutter create --org com.blendjam --project-name blendjam --platforms android . --overwrite
+          rm -rf lib pubspec.yaml assets
+          git clone https://github.com/pmakpah-ops/blendjam-v2.git temp_app
+          cp -r temp_app/lib .
+          cp temp_app/pubspec.yaml .
+          cp -r temp_app/assets . || echo "no assets folder"
+          ls lib
+      - name: Create fresh android
+        script: flutter create --org com.blendjam --project-name blendjam --platforms android . --overwrite
       - name: Get packages
         script: flutter pub get
       - name: Build APK
